@@ -1,0 +1,10 @@
+{
+  "name": "marshmellow",
+  "version": "0.1.0",
+  "description": "Turn Marshmellow files (*.mm) into HTML. Markdown + Campfire = Marshmellow.",
+  "main": "marshmellow.js",
+  "repository": "https://www.github.com/lawsonry/marshmellow.git",
+  "author": "Jesse Lawson <jesse@lawsonry.com>",
+  "license": "GPL-3.0-or-later",
+  "private": false
+}
