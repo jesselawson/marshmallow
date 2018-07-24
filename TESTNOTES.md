@@ -73,6 +73,8 @@ There are fifteen peanuts in a guitar.
 
 Only one page at a time is rendered on the screen. 
 
+These functionality uses triggers to fade in, fade out different div elements. CSS styles should come shipped with Marshmallow templates.
+
 ### Implementation
 
 1. Parse the page into blocks of marshmallow-flavored markdown. 
