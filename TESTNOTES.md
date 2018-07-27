@@ -10,26 +10,6 @@ mm process all standard markdown, including marshmellow syntax.
 
 # Marshmellow Syntax
 
-## Expansions in Place
-
-Syntax: `[some word]/another word/even more words/`
-Example: I really need my [best friend]/dog/one and only companion/.
-
-This will create a link on the first word, and when you click it, the word remains a link but the text turns into the next word in the list. You can have as many as you want; they're delimited by `/`. 
-
-## Choices and Memory
-
-Syntax: `[ label | %(option), %(option2), %(option_n)](post-choice replacement text, if any)`
-Example: `[ dinner_snack | Would you like %(chips), %(cheese), or %(buttered yams)?](I always knew you'd like %%)`
-
-This allows you to create a choice and optional text to replace the choice delivery sentence with another sentence. 
-
-Once the choice is made, you can query it later like this:
-
-`Let's sit down. [ dinner_snack ? (I see you've already got some food. %%, is it?) : (I guess you haven't picked something yet?)] Great.`
-
-%% yields the value. Can we check if it's the first word in a sentence so that we capitalize it? 
-
 ## Pages
 
 Marshmellow is different from Mardown in that it chops up a *.mm file into "pages". A file `example.mm` can consist of many pages.
@@ -122,4 +102,26 @@ Vel scaevola antiopam necessitatibus ad, sed id vulputate efficiendi. Quidam ine
 Modus antiopam consequuntur te vim, ea cum saperet molestiae. In simul soluta verterem nec, sit prima affert veniam te. Et lorem facilisis qui, in facer partem usu. Postea option vituperata est an.
 </div>
 ```
+
+
+
+## Expansions in Place
+
+Syntax: `[some word]/another word/even more words/`
+Example: I really need my [best friend]/dog/one and only companion/.
+
+This will create a link on the first word, and when you click it, the word remains a link but the text turns into the next word in the list. You can have as many as you want; they're delimited by `/`. 
+
+## Choices and Memory
+
+Syntax: `[ label | %(option), %(option2), %(option_n)](post-choice replacement text, if any)`
+Example: `[ dinner_snack | Would you like %(chips), %(cheese), or %(buttered yams)?](I always knew you'd like %%)`
+
+This allows you to create a choice and optional text to replace the choice delivery sentence with another sentence. 
+
+Once the choice is made, you can query it later like this:
+
+`Let's sit down. [ dinner_snack ? (I see you've already got some food. %%, is it?) : (I guess you haven't picked something yet?)] Great.`
+
+%% yields the value. Can we check if it's the first word in a sentence so that we capitalize it? 
 

@@ -1,0 +1,347 @@
+<html>
+<head>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jasmine/3.1.0/jasmine.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/3.1.0/jasmine.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/3.1.0/jasmine-html.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/3.1.0/boot.min.js"></script>
+<script src="../assets/js/prism.js"></script>
+<link rel="stylesheet" href="../assets/css/prism.css"/>
+
+<style>
+
+@import url('https://fonts.googleapis.com/css?family=Roboto:100|Source+Serif+Pro');
+
+body {
+    font-family: 'Source Serif Pro', serif;
+    height: 100%;
+}
+
+h1, h2, h3, h4, h5 {
+	font-family: 'Roboto', sans-serif;
+	
+}
+
+.mm-page-container {
+    width: 100%;
+    max-width: 660px;
+	margin: 1em auto;
+	display: flex;
+	flex-direction: column;
+	-webkit-box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.35);
+    -moz-box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.35);
+    box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.35);
+	border-radius: 5px;
+}
+
+.mm-page {
+	padding: 1em;
+	
+}
+
+.mm-affirmation-text {
+	background-color: #D4DCCD;
+	padding: 1em;
+	border-radius: 5px;
+	color: #6B717E;
+    font-size: 1em;
+    margin: .5em auto;
+}
+
+.mm-button-next-page {
+	opacity: 1;
+	
+	border-radius: 25px;
+	padding: 1em;
+	
+}
+
+.mm-button-next-page.fade-out {
+	transition: opacity 1s;
+	opacity: 0;
+}
+
+.faded-out {
+   opacity: 0;
+
+}
+
+.faded-out.fade-in {
+  transition: opacity 1s;
+  opacity: 1;
+
+}
+</style>
+
+</head>
+<body>
+
+<div id="mm-page-container" class="mm-page-container"></div>
+
+<script>
+
+const module = {
+    id: 1,
+    name: 'What\'s in a page?',
+    course: 1
+}
+
+const pages = [
+`
+# Welcome to the course tutorial!
+
+This is just a quick overview of what the courses look like, what is expected of you, and what you can expect from the courses. 
+
+Every course looks like what you see here. There will be explanatory text, sometimes followed by some code that will look like this:
+
+\`\`\`js
+console.log("Hello, world! Here's some code.")
+\`\`\`
+
+So I hope this has been wonderful.
+`,
+`
+# Page Two
+
+And this is page two!
+`
+]
+
+function mmError(text) {
+		let banner = "[ Marshmallow.js ] Error: "
+		banner += text
+		console.error(banner)
+}
+
+function getPage(num) {
+	return pages[num]
+}
+
+'use strict';
+
+function Marshmallow() {
+
+	// The student info starts out as id=0 so that no one HAS to log in if they don't want to. 
+	this.student = {
+        isLoggedIn: false,
+		name: 'anonymous',
+		id: 0,
+        pageStatus: [],
+        
+	}
+
+  // Rules
+  this.rules =  [ // Remember you need to put ( and ) around the blocks representing $1 $2 $n
+    {regex: /```([a-z]*)\n([\s\S]*?)\n```/g, replacement: '<pre><code class="language-$1 line-numbers">$2</code></pre>'}, // Do code blocks first
+    {regex: /(#+)(.*)/g, replacement: header},                                         // headers
+    {regex: /!\[([^\[]+)\]\(([^\)]+)\)/g, replacement: '<img src="$2" alt="$1">'}, // image
+    {regex: /\[([^\[]+)\]\(([^\)]+)\)/g, replacement: '<a href="$2">$1</a>'},        // hyperlink
+    {regex: /(\*\*|__)(.*?)\1/g, replacement: '<strong>$2</strong>'},                  // bold
+    {regex: /(\*|_)(.*?)\1/g, replacement: '<em>$2</em>'},                             // emphasis
+    {regex: /\~\~(.*?)\~\~/g, replacement: '<del>$1</del>'},                           // del
+    {regex: /\:\"(.*?)\"\:/g, replacement: '<q>$1</q>'},                               // quote
+    {regex: /`(.*?)`/g, replacement: '<code>$1</code>'},                               // inline code
+    {regex: /\n\*(.*)/g, replacement: ulList},                                         // ul lists
+    {regex: /\n[0-9]+\.(.*)/g, replacement: olList},                                   // ol lists
+    {regex: /\n(&gt;|\>)(.*)/g, replacement: blockquote},                              // blockquotes
+    {regex: /\n-{5,}/g, replacement: '\n<hr />'},                                      // horizontal rule
+    {regex: /\n([^\n]+)\n/g, replacement: para},                                       // add paragraphs
+    {regex: /<\/ul>\s?<ul>/g, replacement: ''},                                        // fix extra ul
+    {regex: /<\/ol>\s?<ol>/g, replacement: ''},                                        // fix extra ol
+    {regex: /<\/blockquote><blockquote>/g, replacement: '\n'}                          // fix extra blockquote
+    
+  ];
+
+  // Add a rule.
+  this.addRule = function (regex, replacement) {
+    regex.global = true;
+    regex.multiline = false;
+    this.rules.push({regex: regex, replacement: replacement});
+  };
+
+  // Render some Markdown into HTML.
+  this.render = function (text) {
+    text = '\n' + text + '\n';
+    this.rules.forEach(function (rule) {
+      text = text.replace(rule.regex, rule.replacement);
+    });
+    return text.trim();
+  };
+
+  function para (text, line) {
+    
+    var trimmed = line.trim();
+    if (/^<\/?(ul|ol|li|h|p|bl)/i.test(trimmed)) {
+      return '\n' + line + '\n';
+    }
+    return '\n<p>' + trimmed + '</p>\n';
+  }
+
+  function ulList (text, item) {
+    return '\n<ul>\n\t<li>' + item.trim() + '</li>\n</ul>';
+  }
+
+  function olList (text, item) {
+    return '\n<ol>\n\t<li>' + item.trim() + '</li>\n</ol>';
+  }
+
+  function blockquote (text, tmp, item) {
+    return '\n<blockquote>' + item.trim() + '</blockquote>';
+  }
+
+  function header (text, chars, content) {
+    var level = chars.length;
+    return '<h' + level + '>' + content.trim() + '</h' + level + '>';
+  }
+
+  this.init = function(mm) {
+    var pageContainer = document.getElementById('mm-page-container')
+    var pageContents = pageContainer.innerHTML
+    var compiledContents = this.render(pageContents);
+    pageContainer.innerHTML = compiledContents
+
+    // Get a page and then attach it to the pageContainer, ensuring that we set the appropriate classes
+    for(var a=0;a<pages.length;a++) {
+        // Create a new div to hold the page
+        var pageElement = document.createElement('div');
+        
+        // Set the new page's id
+        pageElement.setAttribute('id', 'mm-page-'+a)
+        
+        // Add the required page classes, ensuring the first page is always visible
+        pageElement.classList.add('mm-page')
+        
+        // If we're not on the first page, hide this page
+        // TODO: Check if currently logged in student has already seen this page. If yes, then forget the class to hide it
+        if(a>0) {
+            pageElement.classList.add('faded-out')
+        }
+    
+        // Set the new page's content
+        let pageContents = getPage(a)
+        
+        // Run the page contents through the mmd renderer
+        let compiledContents = this.render(pageContents)
+        
+        // Add the compiled page contents to the new page element
+        pageElement.innerHTML = compiledContents
+        
+        // Check if a+1 >= pages.length, because if it is, we don't need a "next page" button
+        if(a+1 < pages.length) {
+            var nextPageButton = document.createElement('button')
+            nextPageButton.setAttribute('onclick', mm+'.handleNextPageButton(this, '+(a+1)+')')
+            nextPageButton.textContent = "Continue"
+            nextPageButton.classList.add('mm-button-next-page')
+            
+            pageElement.appendChild(nextPageButton)
+        } else {
+            // Create a button that marks this module as complete
+            var moduleCompleteButton = document.createElement('button')
+            moduleCompleteButton.setAttribute('onclick', mm+'.handleModuleCompleteButton(this, ')
+
+        }
+            
+        // Add the page to the page container
+        document.getElementById('mm-page-container').appendChild(pageElement);
+
+        // Finally, update the student object so that pageStatus = 0 reflects the current page status
+        this.student.pageStatus[a] = 0
+
+        } // End for loop over pages
+    } // end init()
+
+    this.handleNextPageButton = function(btn, num) {
+
+        // Mark the page as "complete" by the learner
+        this.student.pageStatus[num-1] = 1
+
+        // Fade out the button. btn is a reference to the button that calls this function, so fade it out
+        btn.classList.add('fade-out')
+
+        // Replace it with affirmation... ex: (15% complete. Great job!)
+
+        // How much % progress are we at? 
+        let progress = '<strong>You\'re ' + ((num*100) / pages.length).toFixed(1) + '% complete! Keep it up!</strong>'
+
+        // Add some reminder if the student is not logged in
+        if(!this.student.isLoggedIn) {
+            progress += '<br/><em>Psst. If you want to save your progress and track your work toward a certification, create a <a href="#">free account</a>!</em>'
+        }
+
+        let progressIndicator = document.createElement('p')
+        progressIndicator.classList.add('mm-affirmation-text')
+        progressIndicator.innerHTML = progress
+
+        // Remove the button, and add the progress indicator
+        btn.remove()
+
+        // Add the paragraph
+        document.getElementById('mm-page-'+(num-1)).appendChild(progressIndicator)
+
+        // num is the page that we want to fade in. It should be the next page since this is set programmatically
+        let ele = document.getElementById('mm-page-'+num)
+        if(ele == null) {
+            mmError("Could not find page 'mm-page-"+num+"'")
+        } else {
+            ele.classList.add('fade-in') 
+        }
+    }
+}
+
+var md = new Marshmallow();
+
+// Pass the name of the Marshmallow variable so that the init() function works correctly
+md.init("md");
+
+
+
+</script>
+
+<script>
+
+describe('The Marshmallow Markdown Compiler', function() {
+
+	var mm;
+	
+	function shouldCompile(markdown, html) {
+		let result = mm.render(markdown)
+		expect(result).toEqual(html)
+	}
+
+	beforeEach(()=> {
+		mm = new Marshmallow()
+	})
+
+	it('should convert a # to a <h1>', () => {
+		shouldCompile("# Test", "<h1>Test</h1>")
+	})
+	
+	it('should convert a ## to a <h2>', () => {
+		shouldCompile("## Test", "<h2>Test</h2>")
+	})
+
+})
+
+
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
